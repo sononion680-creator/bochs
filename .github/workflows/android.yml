@@ -21,7 +21,6 @@ jobs:
       run: |
         sudo ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529"
 
-    # Restored exactly back to your script's execution layout
     - name: Run Native NDK Build
       run: |
         export ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529
@@ -37,11 +36,16 @@ jobs:
           ndk-build || echo "Searching for JNI paths..."
         fi
 
+    # Diagnostic Step: Prints out every single file in the repo to trace what was generated
+    - name: Find Built Files
+      run: |
+        echo "=== Listing all files in repository ==="
+        find . -maxdepth 4 -not -path '*/.*'
+
     - name: Upload Finished Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: lBochs-Native-Output
-        # Fix: Using a direct search pattern so it picks up the compiled binaries wherever they are dropped
         path: |
           **/*.apk
           **/*.so
