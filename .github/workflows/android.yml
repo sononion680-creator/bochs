@@ -1,36 +1,49 @@
-name: Build lBochs Launcher APK
+name: Build lBochs APK
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    - name: Set up Java 17
+    - name: Set up Java 8
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '8'
 
-    - name: Grant File Permissions
-      run: chmod +x gradlew || true
-
-    - name: Compile Installer Package
+    - name: Install Legacy Android NDK & SDK Build Tools
       run: |
-        if [ -f "./gradlew" ]; then
-          ./gradlew assembleDebug
+        sudo ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" "build-tools;30.0.3" "platforms;android-30"
+
+    - name: Compile Native libSDL Port Build
+      run: |
+        export ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529
+        export PATH=$ANDROID_NDK_HOME:$PATH
+        
+        # Trigger the native compilation tools directly
+        if [ -f "./build.sh" ]; then
+          chmod +x build.sh
+          ./build.sh
+        elif [ -f "./change_command.sh" ]; then
+          chmod +x change_command.sh
+          ./change_command.sh
         else
-          gradle assembleDebug
+          # Fallback execution mapping for native libSDL layout structure
+          ndk-build APP_BUILD_SCRIPT=jni/Android.mk
         fi
 
-    - name: Upload Clean Build
+    - name: Upload Clean Binaries
       uses: actions/upload-artifact@v4
       with:
-        name: lBochs-Clean-App
-        path: "**/build/outputs/apk/**/*.apk"
-        
+        name: lBochs-Compiled-Package
+        path: |
+          **/*.apk
+          **/*.so
+          bin/**/*.apk
+          
