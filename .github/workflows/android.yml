@@ -30,9 +30,11 @@ jobs:
       run: |
         echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529" >> $GITHUB_ENV
 
-    # Fixed: Running compilation directly from the root directory
+    # Fixed: CD into the NDK subfolder where the build configuration files live
     - name: Compile APK via Legacy Gradle
-      run: gradle assembleDebug --stacktrace
+      run: |
+        cd NDK
+        gradle assembleDebug --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
