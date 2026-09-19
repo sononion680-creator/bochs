@@ -30,11 +30,9 @@ jobs:
       run: |
         echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529" >> $GITHUB_ENV
 
-    # Fix: Step into the android directory path where the actual gradle configuration lives
+    # Fixed: Running compilation directly from the root directory
     - name: Compile APK via Legacy Gradle
-      run: |
-        cd android
-        gradle assembleDebug --stacktrace
+      run: gradle assembleDebug --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
