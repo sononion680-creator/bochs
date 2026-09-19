@@ -11,7 +11,6 @@ jobs:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    # Step 1: Use Java 17 temporarily so the NDK installer works perfectly
     - name: Set up Java 17 for Installer Tools
       uses: actions/setup-java@v4
       with:
@@ -23,7 +22,6 @@ jobs:
       with:
         packages: 'ndk;21.4.7075529'
 
-    # Step 2: Now switch the environment to Java 8 which lBochs needs to compile
     - name: Switch to Java 8 for Compilation
       uses: actions/setup-java@v4
       with:
@@ -34,9 +32,13 @@ jobs:
       run: |
         echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/21.4.7075529" >> $GITHUB_ENV
 
-    - name: Grant Execute Permissions
-      run: chmod +x gradlew
+    # Changed step: Using the global system gradle rather than looking for a missing local wrapper
+    - name: Compile APK via Global Gradle
+      run: gradle assembleDebug --stacktrace
 
-    - name: Compile APK
-      run: ./gradlew assembleDebug --stacktrace
-      
+    - name: Upload Finished APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: lBochs-Clean-Build
+        path: "**/build/outputs/apk/**/*.apk"
+        
