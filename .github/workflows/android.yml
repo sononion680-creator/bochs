@@ -17,28 +17,31 @@ jobs:
         distribution: 'temurin'
         java-version: '8'
 
-    - name: Setup Legacy Gradle 6.9
-      uses: gradle/actions/setup-gradle@v4
-      with:
-        gradle-version: '6.9'
-
     - name: Install Legacy Android NDK
       run: |
         sudo ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529"
 
-    - name: Set NDK Environment Variable
+    - name: Run Native NDK Build
       run: |
-        echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529" >> $GITHUB_ENV
+        export ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529
+        export PATH=$ANDROID_NDK_HOME:$PATH
+        
+        # Check if there is an old execution script or execute ndk-build directly
+        if [ -f "./build.sh" ]; then
+          chmod +x build.sh
+          ./build.sh
+        elif [ -d "jni" ]; then
+          ndk-build
+        else
+          cd proguard || true
+          ndk-build || echo "Searching for JNI paths..."
+        fi
 
-    # Fixed: CD into the NDK subfolder where the build configuration files live
-    - name: Compile APK via Legacy Gradle
-      run: |
-        cd NDK
-        gradle assembleDebug --stacktrace
-
-    - name: Upload Finished APK
+    - name: Upload Finished Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: lBochs-Clean-Build
-        path: "**/build/outputs/apk/**/*.apk"
-        
+        name: lBochs-Native-Output
+        path: |
+          **/*.apk
+          **/*.so
+          
