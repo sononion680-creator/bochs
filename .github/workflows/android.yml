@@ -26,22 +26,28 @@ jobs:
         export ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529
         export PATH=$ANDROID_NDK_HOME:$PATH
         
-        # Check if there is an old execution script or execute ndk-build directly
-        if [ -f "./build.sh" ]; then
-          chmod +x build.sh
-          ./build.sh
-        elif [ -d "jni" ]; then
-          ndk-build
+        # Step into the exact legacy build directory specified by the source tree
+        if [ -d "build/android" ]; then
+          cd build/android
+          chmod +x build-core.sh || true
+          ./build-core.sh || ndk-build
         else
-          cd proguard || true
-          ndk-build || echo "Searching for JNI paths..."
+          # Fallback if executing from root paths
+          if [ -f "./build.sh" ]; then
+            chmod +x build.sh
+            ./build.sh
+          else
+            ndk-build
+          fi
         fi
 
     - name: Upload Finished Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: lBochs-Native-Output
+        name: lBochs-Pure-Native-Build
+        # Fix: Broaden search rules across the entire tree to grab everything generated
         path: |
           **/*.apk
           **/*.so
+          build/android/**/*.apk
           
