@@ -11,14 +11,12 @@ jobs:
     - name: Checkout Source Code
       uses: actions/checkout@v4
 
-    # Setup Java 8 directly since we will manually link tools
     - name: Set up Java 8
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '8'
 
-    # Download and configure older Gradle 6.9 to match Java 8 environment
     - name: Setup Legacy Gradle 6.9
       uses: gradle/actions/setup-gradle@v4
       with:
@@ -32,9 +30,11 @@ jobs:
       run: |
         echo "ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/21.4.7075529" >> $GITHUB_ENV
 
-    # Using our newly configured legacy gradle command
+    # Fix: Step into the android directory path where the actual gradle configuration lives
     - name: Compile APK via Legacy Gradle
-      run: gradle assembleDebug --stacktrace
+      run: |
+        cd android
+        gradle assembleDebug --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
